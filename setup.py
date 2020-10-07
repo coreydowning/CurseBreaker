@@ -6,6 +6,16 @@ setuptools.setup(
     author="AcidWeb",
     author_email="pawelj@iosphe.re",
     url="https://github.com/AcidWeb/CurseBreaker",
-    packages=setuptools.find_packages(),
+    packages=[
+        'prompt_toolkit',
+        'cloudscraper',
+        'checksumdir',
+        'pyperclip',
+        'requests',
+        'markdown',
+        'bbcode',
+        'rich',
+        'lupa'
+    ],
     python_requires='~=3.8',
 )
