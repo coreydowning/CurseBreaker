@@ -28,7 +28,7 @@ from prompt_toolkit import PromptSession, HTML
 from prompt_toolkit.shortcuts import confirm
 from prompt_toolkit.completion import WordCompleter, NestedCompleter
 from distutils.version import StrictVersion
-from CB import HEADERS, HEADLESS_TERMINAL_THEME, __version__
+from CB import HEADERS, __version__
 from CB.Core import Core
 from CB.Compat import pause, timeout, clear, set_terminal_title, set_terminal_size, getch, kbhit
 from CB.Wago import WagoUpdater
@@ -45,7 +45,8 @@ asyncio.set_event_loop(asyncio.SelectorEventLoop(selectors.SelectSelector()))
 class TUI:
     def __init__(self):
         self.core = Core()
-        self.session = PromptSession(reserve_space_for_menu=6, complete_in_thread=True)
+        self.session = PromptSession(
+            reserve_space_for_menu=6, complete_in_thread=True)
         self.headless = False
         self.console = None
         self.table = None
@@ -117,7 +118,8 @@ class TUI:
                 pass
             elif getattr(self, f'c_{command[0].lower()}', False):
                 try:
-                    getattr(self, f'c_{command[0].lower()}')(command[1].strip() if len(command) > 1 else False)
+                    getattr(self, f'c_{command[0].lower()}')(
+                        command[1].strip() if len(command) > 1 else False)
                 except Exception as e:
                     self.handle_exception(e)
                 sys.exit(0)
@@ -147,8 +149,10 @@ class TUI:
                     self.c_update(None, True)
                     if self.core.backup_check():
                         self.setup_table()
-                        self.console.print(f'\n[green]Backing up WTF directory{"!" if self.headless else ":"}[/green]')
-                        self.core.backup_wtf(None if self.headless else self.console)
+                        self.console.print(
+                            f'\n[green]Backing up WTF directory{"!" if self.headless else ":"}[/green]')
+                        self.core.backup_wtf(
+                            None if self.headless else self.console)
                     if self.core.config['WAUsername'] != 'DISABLED':
                         self.setup_table()
                         self.c_wago_update(None, False)
@@ -166,11 +170,13 @@ class TUI:
                            'ands.\nCommand [green]exit[/green] or pressing [green]CTRL+D[/green] will close the applica'
                            'tion.\n')
         if len(self.core.config['Addons']) == 0:
-            self.console.print('Command [green]import[/green] might be used to detect already installed addons.\n')
+            self.console.print(
+                'Command [green]import[/green] might be used to detect already installed addons.\n')
         # Prompt session
         while True:
             try:
-                command = self.session.prompt(HTML('<ansibrightgreen>CB></ansibrightgreen> '), completer=self.completer)
+                command = self.session.prompt(
+                    HTML('<ansibrightgreen>CB></ansibrightgreen> '), completer=self.completer)
             except KeyboardInterrupt:
                 continue
             except EOFError:
@@ -180,7 +186,8 @@ class TUI:
                 if getattr(self, f'c_{command[0].lower()}', False):
                     try:
                         self.setup_table()
-                        getattr(self, f'c_{command[0].lower()}')(command[1].strip() if len(command) > 1 else False)
+                        getattr(self, f'c_{command[0].lower()}')(
+                            command[1].strip() if len(command) > 1 else False)
                         self.setup_completer()
                     except Exception as e:
                         self.handle_exception(e)
@@ -208,7 +215,8 @@ class TUI:
                             url = binary['browser_download_url']
                             break
                     if url and StrictVersion(remoteversion[1:]) > StrictVersion(__version__):
-                        self.console.print('[green]Updating CurseBreaker...[/green]')
+                        self.console.print(
+                            '[green]Updating CurseBreaker...[/green]')
                         shutil.move(sys.executable, sys.executable + '.old')
                         payload = requests.get(url, headers=HEADERS)
                         if self.os == 'Darwin':
@@ -228,15 +236,18 @@ class TUI:
                         subprocess.call([sys.executable] + sys.argv[1:])
                         sys.exit(0)
             except Exception as e:
-                self.console.print(f'[bold red]Update failed!\n\nReason: {str(e)}[/bold red]\n')
+                self.console.print(
+                    f'[bold red]Update failed!\n\nReason: {str(e)}[/bold red]\n')
                 self.print_log()
                 pause(self.headless)
                 sys.exit(1)
 
     def motd_parser(self):
-        payload = requests.get('https://storage.googleapis.com/cursebreaker/motd', headers=HEADERS)
+        payload = requests.get(
+            'https://storage.googleapis.com/cursebreaker/motd', headers=HEADERS)
         if payload.status_code == 200:
-            self.console.print(Panel(payload.content.decode('UTF-8'), title='MOTD', border_style='red'))
+            self.console.print(Panel(payload.content.decode(
+                'UTF-8'), title='MOTD', border_style='red'))
             self.console.print('')
 
     def handle_exception(self, e, table=True):
@@ -249,7 +260,8 @@ class TUI:
                 self.console.print(Traceback.from_exception(exc_type=es.__class__, exc_value=es,
                                                             traceback=es.__traceback__))
         else:
-            self.console.print(Traceback.from_exception(exc_type=e.__class__, exc_value=e, traceback=e.__traceback__))
+            self.console.print(Traceback.from_exception(
+                exc_type=e.__class__, exc_value=e, traceback=e.__traceback__))
 
     def print_header(self):
         clear()
@@ -257,12 +269,14 @@ class TUI:
             self.console.print(f'[bold green]CurseBreaker[/bold green] [bold red]v{__version__}[/bold red] | '
                                f'[yellow]{datetime.now()}[/yellow]', highlight=False)
         else:
-            self.console.print(Rule(f'[bold green]CurseBreaker[/bold green] [bold red]v{__version__}[/bold red]'))
+            self.console.print(Rule(
+                f'[bold green]CurseBreaker[/bold green] [bold red]v{__version__}[/bold red]'))
             self.console.print('')
 
     def print_log(self):
         if self.headless:
-            html = self.console.export_html(inline_styles=True, theme=HEADLESS_TERMINAL_THEME)
+            html = self.console.export_html(
+                inline_styles=True, theme=HEADLESS_TERMINAL_THEME)
             with open('CurseBreaker.html', 'a+', encoding='utf-8') as log:
                 log.write(html)
 
@@ -275,7 +289,8 @@ class TUI:
                     windll.user32.ShowWindow(window, 0)
         elif 'WINDIR' in os.environ and 'WT_SESSION' not in os.environ and 'ALACRITTY_LOG' not in os.environ:
             set_terminal_size(100, 50)
-            windll.kernel32.SetConsoleScreenBufferSize(windll.kernel32.GetStdHandle(-11), wintypes._COORD(100, 200))
+            windll.kernel32.SetConsoleScreenBufferSize(
+                windll.kernel32.GetStdHandle(-11), wintypes._COORD(100, 200))
             self.console = Console(width=97)
         elif self.os == 'Darwin':
             set_terminal_size(100, 50)
@@ -334,7 +349,8 @@ class TUI:
 
     def setup_table(self):
         self.table = Table(box=box.SQUARE)
-        self.table.add_column('Status', header_style='bold white', no_wrap=True, justify='center')
+        self.table.add_column(
+            'Status', header_style='bold white', no_wrap=True, justify='center')
         self.table.add_column('Name', header_style='bold white')
         self.table.add_column('Version', header_style='bold white')
 
@@ -361,14 +377,17 @@ class TUI:
                 optignore = True
             else:
                 optignore = False
-            args = re.sub(r'([a-zA-Z0-9_:])([ ]+)([a-zA-Z0-9_:])', r'\1,\3', args)
-            addons = [addon.strip() for addon in list(reader([args], skipinitialspace=True))[0]]
+            args = re.sub(
+                r'([a-zA-Z0-9_:])([ ]+)([a-zA-Z0-9_:])', r'\1,\3', args)
+            addons = [addon.strip() for addon in list(
+                reader([args], skipinitialspace=True))[0]]
             with Progress('{task.completed}/{task.total}', '|', BarColumn(bar_width=None), '|',
                           auto_refresh=False, console=self.console) as progress:
                 task = progress.add_task('', total=len(addons))
                 while not progress.finished:
                     for addon in addons:
-                        installed, name, version = self.core.add_addon(addon, optignore)
+                        installed, name, version = self.core.add_addon(
+                            addon, optignore)
                         if installed:
                             self.table.add_row('[green]Installed[/green]', Text(name, no_wrap=True),
                                                Text(version, no_wrap=True))
@@ -425,7 +444,8 @@ class TUI:
             addons = self.parse_args(args)
             compacted = -1
         else:
-            addons = sorted(self.core.config['Addons'], key=lambda k: k['Name'].lower())
+            addons = sorted(
+                self.core.config['Addons'], key=lambda k: k['Name'].lower())
             compacted = 0
         exceptions = []
         with Progress('{task.completed:.0f}/{task.total}', '|', BarColumn(bar_width=None), '|',
@@ -439,7 +459,8 @@ class TUI:
                     try:
                         # noinspection PyTypeChecker
                         name, versionnew, versionold, modified, blocked, source, sourceurl, changelog = self.core.\
-                            update_addon(addon if isinstance(addon, str) else addon['URL'], update, force)
+                            update_addon(addon if isinstance(
+                                addon, str) else addon['URL'], update, force)
                         if provider:
                             source = f' [bold white]{source}[/bold white]'
                         else:
@@ -448,22 +469,26 @@ class TUI:
                             if versionold == versionnew:
                                 if modified:
                                     self.table.add_row(f'[bold red]Modified[/bold red]{source}',
-                                                       self.parse_link(name, sourceurl),
+                                                       self.parse_link(
+                                                           name, sourceurl),
                                                        self.parse_link(versionold, changelog))
                                 else:
                                     if self.core.config['CompactMode'] and compacted > -1:
                                         compacted += 1
                                     else:
                                         self.table.add_row(f'[green]Up-to-date[/green]{source}',
-                                                           self.parse_link(name, sourceurl),
+                                                           self.parse_link(
+                                                               name, sourceurl),
                                                            self.parse_link(versionold, changelog))
                             else:
                                 if modified or blocked:
                                     self.table.add_row(f'[bold red]Update suppressed[/bold red]{source}',
-                                                       self.parse_link(name, sourceurl),
+                                                       self.parse_link(
+                                                           name, sourceurl),
                                                        self.parse_link(versionold, changelog))
                                 else:
-                                    version = self.parse_link(versionnew, changelog)
+                                    version = self.parse_link(
+                                        versionnew, changelog)
                                     version.stylize('yellow')
                                     self.table.add_row(
                                         f'[yellow]{"Updated" if update else "Update available"}[/yellow]{source}',
@@ -475,12 +500,14 @@ class TUI:
                                                Text('', no_wrap=True))
                     except Exception as e:
                         exceptions.append(e)
-                    progress.update(task, advance=1 if args else 0.5, refresh=True)
+                    progress.update(
+                        task, advance=1 if args else 0.5, refresh=True)
         if addline:
             self.console.print('')
         self.console.print(self.table)
         if compacted > 0:
-            self.console.print(f'Additionally [green]{compacted}[/green] addons are up-to-date.')
+            self.console.print(
+                f'Additionally [green]{compacted}[/green] addons are up-to-date.')
         if len(addons) == 0:
             self.console.print('Apparently there are no addons installed by CurseBreaker.\n'
                                'Command [green]import[/green] might be used to detect already installed addons.')
@@ -507,20 +534,26 @@ class TUI:
 
     def c_orphans(self, _):
         orphansd, orphansf = self.core.find_orphans()
-        self.console.print('[green]Directories that are not part of any installed addon:[/green]')
+        self.console.print(
+            '[green]Directories that are not part of any installed addon:[/green]')
         for orphan in sorted(orphansd):
-            self.console.print(orphan.replace('[GIT]', '[yellow]\[GIT][/yellow]'), highlight=False)
-        self.console.print('\n[green]Files that are leftovers after no longer installed addons:[/green]')
+            self.console.print(orphan.replace(
+                '[GIT]', '[yellow]\[GIT][/yellow]'), highlight=False)
+        self.console.print(
+            '\n[green]Files that are leftovers after no longer installed addons:[/green]')
         for orphan in sorted(orphansf):
             self.console.print(orphan, highlight=False)
 
     def c_uri_integration(self, _):
         if self.os == 'Windows':
             self.core.create_reg()
-            self.console.print('CurseBreaker.reg file was created. Attempting to import...')
-            out = os.system('"' + str(Path(os.path.dirname(sys.executable), 'CurseBreaker.reg')) + '"')
+            self.console.print(
+                'CurseBreaker.reg file was created. Attempting to import...')
+            out = os.system(
+                '"' + str(Path(os.path.dirname(sys.executable), 'CurseBreaker.reg')) + '"')
             if out != 0:
-                self.console.print('Import failed. Please try to import REG file manually.')
+                self.console.print(
+                    'Import failed. Please try to import REG file manually.')
             else:
                 os.remove('CurseBreaker.reg')
         else:
@@ -530,9 +563,11 @@ class TUI:
         if args:
             status = self.core.dev_toggle(args)
             if status is None:
-                self.console.print('[bold red]This addon doesn\'t exist or it is not installed yet.[/bold red]')
+                self.console.print(
+                    '[bold red]This addon doesn\'t exist or it is not installed yet.[/bold red]')
             elif status == -1:
-                self.console.print('[bold red]This feature can be only used with CurseForge addons.[/bold red]')
+                self.console.print(
+                    '[bold red]This feature can be only used with CurseForge addons.[/bold red]')
             elif status == 0:
                 self.console.print('All CurseForge addons are now switched' if args == 'global' else 'Addon switched',
                                    'to the [yellow]beta[/yellow] channel.')
@@ -550,13 +585,17 @@ class TUI:
         if args:
             status = self.core.block_toggle(args)
             if status is None:
-                self.console.print('[bold red]This addon does not exist or it is not installed yet.[/bold red]')
+                self.console.print(
+                    '[bold red]This addon does not exist or it is not installed yet.[/bold red]')
             elif status:
-                self.console.print('Updates for this addon are now [red]suppressed[/red].')
+                self.console.print(
+                    'Updates for this addon are now [red]suppressed[/red].')
             else:
-                self.console.print('Updates for this addon are [green]no longer suppressed[/green].')
+                self.console.print(
+                    'Updates for this addon are [green]no longer suppressed[/green].')
         else:
-            self.console.print('[green]Usage:[/green]\n\tThis command accepts an addon name as an argument.')
+            self.console.print(
+                '[green]Usage:[/green]\n\tThis command accepts an addon name as an argument.')
 
     def c_toggle_backup(self, _):
         status = self.core.generic_toggle('Backup', 'Enabled')
@@ -586,11 +625,14 @@ class TUI:
         else:
             if self.core.config['WAUsername'] == 'DISABLED':
                 self.core.config['WAUsername'] = ''
-                self.console.print('Wago version check is now: [green]ENABLED[/green]')
+                self.console.print(
+                    'Wago version check is now: [green]ENABLED[/green]')
             else:
                 self.core.config['WAUsername'] = 'DISABLED'
-                shutil.rmtree(Path('Interface/AddOns/WeakAurasCompanion'), ignore_errors=True)
-                self.console.print('Wago version check is now: [red]DISABLED[/red]')
+                shutil.rmtree(
+                    Path('Interface/AddOns/WeakAurasCompanion'), ignore_errors=True)
+                self.console.print(
+                    'Wago version check is now: [red]DISABLED[/red]')
         self.core.save_config()
 
     def c_set_wago_api(self, args):
@@ -603,20 +645,23 @@ class TUI:
             self.core.config['WAAPIKey'] = ''
             self.core.save_config()
         else:
-            self.console.print('[green]Usage:[/green]\n\tThis command accepts API key as an argument.')
+            self.console.print(
+                '[green]Usage:[/green]\n\tThis command accepts API key as an argument.')
 
     def c_set_wago_wow_account(self, args):
         if args:
             args = args.strip()
             if os.path.isfile(Path(f'WTF/Account/{args}/SavedVariables/WeakAuras.lua')) or \
                     os.path.isfile(Path(f'WTF/Account/{args}/SavedVariables/Plater.lua')):
-                self.console.print(f'WoW account name set to: [bold white]{args}[/bold white]')
+                self.console.print(
+                    f'WoW account name set to: [bold white]{args}[/bold white]')
                 self.core.config['WAAccountName'] = args
                 self.core.save_config()
             else:
                 self.console.print('Incorrect WoW account name.')
         else:
-            self.console.print('[green]Usage:[/green]\n\tThis command accepts the WoW account name as an argument.')
+            self.console.print(
+                '[green]Usage:[/green]\n\tThis command accepts the WoW account name as an argument.')
 
     def c_wago_update(self, _, verbose=True):
         if os.path.isdir(Path('Interface/AddOns/WeakAuras')) or os.path.isdir(Path('Interface/AddOns/Plater')):
@@ -648,19 +693,25 @@ class TUI:
                 if len(statuswa[0]) > 0 or len(statuswa[1]) > 0:
                     self.console.print('[green]Outdated WeakAuras:[/green]')
                     for aura in statuswa[0]:
-                        self.console.print(f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
+                        self.console.print(
+                            f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
                     self.console.print('\n[green]Detected WeakAuras:[/green]')
                     for aura in statuswa[1]:
-                        self.console.print(f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
+                        self.console.print(
+                            f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
                 if len(statusplater[0]) > 0 or len(statusplater[1]) > 0:
                     if len(statuswa[0]) != 0 or len(statuswa[1]) != 0:
                         self.console.print('')
-                    self.console.print('[green]Outdated Plater profiles/scripts:[/green]')
+                    self.console.print(
+                        '[green]Outdated Plater profiles/scripts:[/green]')
                     for aura in statusplater[0]:
-                        self.console.print(f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
-                    self.console.print('\n[green]Detected Plater profiles/scripts:[/green]')
+                        self.console.print(
+                            f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
+                    self.console.print(
+                        '\n[green]Detected Plater profiles/scripts:[/green]')
                     for aura in statusplater[1]:
-                        self.console.print(f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
+                        self.console.print(
+                            f'[link={aura[1]}]{aura[0]}[/link]', highlight=False)
             else:
                 if len(statuswa[0]) > 0:
                     self.console.print(f'\n[green]The number of outdated WeakAuras:[/green] '
@@ -677,11 +728,14 @@ class TUI:
             self.console.print('[green]Top results of your search:[/green]')
             for url in results:
                 if self.core.check_if_installed(url):
-                    self.console.print(f'[link={url}]{url}[/link] [yellow]\[Installed][/yellow]', highlight=False)
+                    self.console.print(
+                        f'[link={url}]{url}[/link] [yellow]\[Installed][/yellow]', highlight=False)
                 else:
-                    self.console.print(f'[link={url}]{url}[/link]', highlight=False)
+                    self.console.print(
+                        f'[link={url}]{url}[/link]', highlight=False)
         else:
-            self.console.print('[green]Usage:[/green]\n\tThis command accepts a search query as an argument.')
+            self.console.print(
+                '[green]Usage:[/green]\n\tThis command accepts a search query as an argument.')
 
     def c_import(self, args):
         hit, partial_hit, miss = self.core.detect_addons()
@@ -693,7 +747,8 @@ class TUI:
                 self.console.print(addon, highlight=False)
             self.console.print(f'\n[yellow]Possible matches:[/yellow]')
             for addon in partial_hit:
-                self.console.print(' [bold white]or[/bold white] '.join(addon), highlight=False)
+                self.console.print(
+                    ' [bold white]or[/bold white] '.join(addon), highlight=False)
             self.console.print(f'\n[red]Unknown directories:[/red]')
             for addon in miss:
                 self.console.print(f'{addon}', highlight=False)
@@ -705,7 +760,8 @@ class TUI:
     def c_export(self, _):
         payload = self.core.export_addons()
         pyperclip.copy(payload)
-        self.console.print(f'{payload}\n\nThe command above was copied to the clipboard.', highlight=False)
+        self.console.print(
+            f'{payload}\n\nThe command above was copied to the clipboard.', highlight=False)
 
     def c_help(self, _):
         self.console.print('[green]install [URL][/green]\n\tCommand accepts a space-separated list of links.\n\t[bold w'

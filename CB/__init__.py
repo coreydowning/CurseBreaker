@@ -1,6 +1,5 @@
 import string
 import random
-from rich.terminal_theme import TerminalTheme
 
 __version__ = '3.10.2'
 __license__ = 'GPLv3'
@@ -18,7 +17,8 @@ def retry(custom_error=False):
                 except KeyboardInterrupt:
                     raise
                 except Exception as e:
-                    description = str(e).replace('Failed to parse addon data: ', '')
+                    description = str(e).replace(
+                        'Failed to parse addon data: ', '')
                     continue
                 else:
                     return result
@@ -27,7 +27,8 @@ def retry(custom_error=False):
                     raise RuntimeError(custom_error)
                 else:
                     if description:
-                        raise RuntimeError(f'Failed to parse addon data: {description}')
+                        raise RuntimeError(
+                            f'Failed to parse addon data: {description}')
                     else:
                         raise RuntimeError('Unknown error during parsing addon data. '
                                            'There may be some issue with the website.')
@@ -35,28 +36,5 @@ def retry(custom_error=False):
     return wraps
 
 
-HEADERS = {'User-Agent': f'CB-{"".join(random.choices(string.ascii_uppercase + string.digits, k=10))}/{__version__}'}
-HEADLESS_TERMINAL_THEME = TerminalTheme(
-    (0, 0, 0),
-    (255, 255, 255),
-    [
-        (0, 0, 0),
-        (128, 0, 0),
-        (0, 128, 0),
-        (128, 128, 0),
-        (0, 0, 128),
-        (128, 0, 128),
-        (0, 128, 128),
-        (192, 192, 192),
-    ],
-    [
-        (128, 128, 128),
-        (255, 0, 0),
-        (0, 255, 0),
-        (255, 255, 0),
-        (0, 0, 255),
-        (255, 0, 255),
-        (0, 255, 255),
-        (255, 255, 255),
-    ],
-)
+HEADERS = {
+    'User-Agent': f'CB-{"".join(random.choices(string.ascii_uppercase + string.digits, k=10))}/{__version__}'}
