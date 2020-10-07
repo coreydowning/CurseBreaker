@@ -17,7 +17,6 @@ from pathlib import Path
 from collections import Counter
 from checksumdir import dirhash
 from multiprocessing import Pool
-from rich.progress import Progress, BarColumn
 from xml.dom.minidom import parse, parseString
 from . import retry, HEADERS, __version__
 from .Tukui import TukuiAddon
@@ -71,7 +70,8 @@ class Core:
 
     def save_config(self):
         with open(self.configPath, 'w') as outfile:
-            json.dump(self.config, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+            json.dump(self.config, outfile, sort_keys=True,
+                      indent=4, separators=(',', ': '))
 
     def update_config(self):
         if 'Version' not in self.config.keys() or self.config['Version'] != __version__:
@@ -95,7 +95,8 @@ class Core:
                     addon['Name'] = 'Tukui'
                     addon['URL'] = 'Tukui'
                 # 2.7.3
-                addon['Directories'] = list(filter(None, set(addon['Directories'])))
+                addon['Directories'] = list(
+                    filter(None, set(addon['Directories'])))
                 # 3.0.2
                 if addon['URL'].endswith('/'):
                     addon['URL'] = addon['URL'][:-1]
@@ -164,8 +165,9 @@ class Core:
     def parse_url(self, url):
         if url.startswith('https://www.curseforge.com/wow/addons/'):
             return CurseForgeAddon(url, self.parse_cf_id(url), self.cfCache,
-                                   'wow' if url in self.config['IgnoreClientVersion'].keys() else self.clientType,
-                                   self.check_if_dev(url))
+                                   'wow' if url in self.config['IgnoreClientVersion'].keys(
+            ) else self.clientType,
+                self.check_if_dev(url))
         elif url.startswith('https://www.wowinterface.com/downloads/'):
             return WoWInterfaceAddon(url, self.wowiCache)
         elif url.startswith('https://www.tukui.org/addons.php?id='):
@@ -176,7 +178,8 @@ class Core:
             if self.clientType == 'wow_retail':
                 raise RuntimeError('Incorrect client version.')
             elif url.endswith('1') or url.endswith('2'):
-                raise RuntimeError('ElvUI and Tukui cannot be installed this way.')
+                raise RuntimeError(
+                    'ElvUI and Tukui cannot be installed this way.')
             return TukuiAddon(url, True)
         elif url.startswith('https://github.com/'):
             return GitHubAddon(url, self.clientType)
@@ -229,7 +232,8 @@ class Core:
         if url.endswith(':'):
             raise NotImplementedError('Provided URL is not supported.')
         elif 'twitch://' in url:
-            url = url.split('/download-client')[0].replace('twitch://', 'https://').strip()
+            url = url.split(
+                '/download-client')[0].replace('twitch://', 'https://').strip()
         elif url.startswith('cf:'):
             url = f'https://www.curseforge.com/wow/addons/{url[3:]}'
         elif url.startswith('wowi:'):
@@ -324,7 +328,8 @@ class Core:
         with Pool() as pool:
             workers = []
             for addon in addons:
-                w = pool.apply_async(self.check_checksum, (addon, ), callback=self.bulk_check_checksum_callback)
+                w = pool.apply_async(
+                    self.check_checksum, (addon, ), callback=self.bulk_check_checksum_callback)
                 workers.append(w)
             for w in workers:
                 w.wait()
@@ -385,7 +390,8 @@ class Core:
     def backup_check(self):
         if self.config['Backup']['Enabled']:
             if not os.path.isfile(Path('WTF-Backup', f'{datetime.datetime.now().strftime("%d%m%y")}.zip')):
-                listofbackups = [Path(x) for x in glob.glob('WTF-Backup/*.zip')]
+                listofbackups = [Path(x)
+                                 for x in glob.glob('WTF-Backup/*.zip')]
                 if len(listofbackups) == self.config['Backup']['Number']:
                     oldest_file = min(listofbackups, key=os.path.getctime)
                     os.remove(oldest_file)
@@ -399,18 +405,11 @@ class Core:
         zipf = zipfile.ZipFile(Path('WTF-Backup', f'{datetime.datetime.now().strftime("%d%m%y")}.zip'), 'w',
                                zipfile.ZIP_DEFLATED)
         filecount = 0
-        for _, _, files in os.walk('WTF/', topdown=True, followlinks=True):
+        for root, _, files in os.walk('WTF/', topdown=True, followlinks=True):
             files = [f for f in files if not f[0] == '.']
             filecount += len(files)
-        with Progress('{task.completed}/{task.total}', '|', BarColumn(bar_width=None), '|', auto_refresh=False,
-                      console=console) as progress:
-            task = progress.add_task('', total=filecount)
-            while not progress.finished:
-                for root, _, files in os.walk('WTF/', topdown=True, followlinks=True):
-                    files = [f for f in files if not f[0] == '.']
-                    for f in files:
-                        zipf.write(Path(root, f))
-                        progress.update(task, advance=1, refresh=True)
+            for f in files:
+                zipf.write(Path(root, f))
         zipf.close()
 
     def find_orphans(self):
@@ -450,7 +449,8 @@ class Core:
     def create_reg(self):
         with open('CurseBreaker.reg', 'w') as outfile:
             outfile.write('Windows Registry Editor Version 5.00\n\n[HKEY_CLASSES_ROOT\.ccip\Shell\Open\Command]\n@="\\"'
-                          + os.path.abspath(sys.executable).replace('\\', '\\\\') + '\\\" \\"%1\\""\n[HKEY_CURRENT_USER'
+                          + os.path.abspath(sys.executable).replace('\\',
+                                                                    '\\\\') + '\\\" \\"%1\\""\n[HKEY_CURRENT_USER'
                           '\Software\Classes\\twitch]\n"URL Protocol"="\\"\\""\n@="\\"URL:CurseBreaker Protocol\\""\n[H'
                           'KEY_CURRENT_USER\Software\Classes\\twitch\DefaultIcon]\n@="\\"CurseBreaker.exe,1\\""\n[HKEY_'
                           'CURRENT_USER\Software\Classes\\twitch\shell]\n[HKEY_CURRENT_USER\Software\Classes\\twitch\sh'
@@ -490,7 +490,8 @@ class Core:
                         raise RuntimeError(f'{slug}\nThe project could be removed from CurseForge or renamed. Uninstall'
                                            f' it (and reinstall if it still exists) to fix this issue.')
             xml = parseString(payload.text)
-            project = xml.childNodes[0].getElementsByTagName('project')[0].getAttribute('id')
+            project = xml.childNodes[0].getElementsByTagName('project')[
+                0].getAttribute('id')
             self.config['CFCacheCloudFlare'][slug] = project
             self.cfIDs = {**self.config['CFCacheCloudFlare'], **self.cfIDs}
             self.save_config()
@@ -499,8 +500,10 @@ class Core:
     @retry(custom_error='Failed to parse the XML file.')
     def parse_cf_xml(self, path):
         xml = parse(path)
-        project = xml.childNodes[0].getElementsByTagName('project')[0].getAttribute('id')
-        payload = requests.get(f'https://addons-ecs.forgesvc.net/api/v2/addon/{project}', headers=HEADERS).json()
+        project = xml.childNodes[0].getElementsByTagName('project')[
+            0].getAttribute('id')
+        payload = requests.get(
+            f'https://addons-ecs.forgesvc.net/api/v2/addon/{project}', headers=HEADERS).json()
         url = payload['websiteUrl'].strip()
         return url
 
@@ -514,7 +517,8 @@ class Core:
             elif addon['URL'].startswith('https://www.wowinterface.com/downloads/'):
                 ids_wowi.append(re.findall(r'\d+', addon['URL'])[0].strip())
         if len(ids_cf) > 0:
-            payload = requests.post('https://addons-ecs.forgesvc.net/api/v2/addon', json=ids_cf, headers=HEADERS).json()
+            payload = requests.post(
+                'https://addons-ecs.forgesvc.net/api/v2/addon', json=ids_cf, headers=HEADERS).json()
             for addon in payload:
                 self.cfCache[str(addon['id'])] = addon
         if len(ids_wowi) > 0:
